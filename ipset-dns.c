@@ -308,15 +308,23 @@ int main(int argc, char *argv[])
 	char msg[512];
 	char ip[INET6_ADDRSTRLEN];
 	char *ipset4, *ipset6;
+	int upsteam_port = 53;
 	int listen_sock, upstream_sock;
 	int pos, i, size, af;
 	socklen_t len;
 	size_t received;
 	pid_t child;
 	
-	if (argc != 5) {
-		fprintf(stderr, "Usage: %s ipv4-ipset ipv6-ipset port upstream\n", argv[0]);
+	if (argc != 5 && argc != 6) {
+		fprintf(stderr, "Usage: %s ipv4-ipset ipv6-ipset port upstream [upstream port]\n", argv[0]);
 		return 1;
+	}
+
+	if (argc == 6) {
+		upsteam_port = atoi(argv[5]);
+		if(upsteam_port <= 0 || upsteam_port > 65535) {
+			upsteam_port = 53;
+		}
 	}
 
 	ipset4 = argv[1];
@@ -346,7 +354,7 @@ int main(int argc, char *argv[])
 	
 	memset(&upstream_addr, 0, sizeof(upstream_addr));
 	upstream_addr.sin_family = AF_INET;
-	upstream_addr.sin_port = htons(53);
+	upstream_addr.sin_port = htons(upsteam_port);
 	inet_aton(argv[4], &upstream_addr.sin_addr);
 	
 	/* TODO: Put all of the below code in several forks all listening on the same sock. */
